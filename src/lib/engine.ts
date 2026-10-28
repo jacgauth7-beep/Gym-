@@ -11,6 +11,8 @@ import { DAY_MS, WEEK_MS, clamp, fmt, fmtDate, linreg } from './util';
 
 export interface DoneSet {
   weight: number;
+  /** Notation en plates saisie, le cas échéant. */
+  notation: string;
   reps: number;
   rir: number;
   e1rm: number;
@@ -44,7 +46,7 @@ export function exerciseHistory(sessions: Session[], exerciseId: string, exclude
       for (const set of se.sets) {
         if (!isDone(set)) continue;
         const rir = rirForCalc(set.rir);
-        sets.push({ weight: set.weight!, reps: set.reps!, rir, e1rm: epley(set.weight!, set.reps!, rir) });
+        sets.push({ weight: set.weight!, notation: set.notation, reps: set.reps!, rir, e1rm: epley(set.weight!, set.reps!, rir) });
       }
     }
     if (!sets.length) continue;

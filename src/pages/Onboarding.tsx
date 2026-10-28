@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { db, saveSettings } from '../db';
 import { Field, NumInput, Segmented } from '../components/ui';
-import { DEFAULT_ENGINE, seedLibrary } from '../lib/defaults';
+import { DEFAULT_ENGINE, DEFAULT_SETTINGS, seedLibrary } from '../lib/defaults';
+import { loadSplitV2 } from '../lib/mySplit';
 import { LEVEL_FR, levelFromYears } from '../lib/engine';
 import type { Goal, Unit } from '../types';
 import { fmt } from '../lib/util';
@@ -11,16 +12,18 @@ export function Onboarding() {
   const [goal, setGoal] = useState<Goal>('maintain');
   const [unit, setUnit] = useState<Unit>('lb');
   const [bw, setBw] = useState<number | null>(null);
-  const [seed, setSeed] = useState(true);
+  const [program, setProgram] = useState<'v2' | 'example' | 'empty'>('v2');
   const level = levelFromYears(years ?? 0, DEFAULT_ENGINE);
   const range = level === 'beginner' ? DEFAULT_ENGINE.rateBeginner : level === 'intermediate' ? DEFAULT_ENGINE.rateIntermediate : DEFAULT_ENGINE.rateAdvanced;
 
   async function finish() {
-    if (seed && (await db.exercises.count()) === 0) {
+    if (program !== 'empty' && (await db.exercises.count()) === 0) {
+      // La bibliothèque d'exemple sert aussi de réserve pour les swaps.
       const { exercises, days } = seedLibrary(unit);
       await db.exercises.bulkPut(exercises);
-      await db.days.bulkPut(days);
+      if (program === 'example') await db.days.bulkPut(days);
     }
+    if (program === 'v2') await loadSplitV2({ plateLb: DEFAULT_SETTINGS.plateLb, plateKg: DEFAULT_SETTINGS.plateKg });
     if (bw) await db.bodyweights.put({ id: crypto.randomUUID(), date: Date.now(), weight: bw, unit });
     await saveSettings({ onboarded: true, trainingYears: years ?? 0, goal, defaultUnit: unit });
   }
@@ -62,10 +65,24 @@ export function Onboarding() {
         <Field label={`Poids de corps actuel (${unit}, facultatif)`}>
           <NumInput value={bw} onChange={setBw} />
         </Field>
-        <label className="flex items-center gap-3 min-h-[48px]">
-          <input type="checkbox" className="h-6 w-6 accent-[rgb(var(--accent))]" checked={seed} onChange={(e) => setSeed(e.target.checked)} />
-          <span>Créer un programme de départ (haut/bas, 4 jours) et une bibliothèque d'exercices</span>
-        </label>
+        <Field label="Programme de départ">
+          <Segmented
+            value={program}
+            onChange={setProgram}
+            options={[
+              { value: 'v2', label: 'Mon split V2' },
+              { value: 'example', label: 'Exemple' },
+              { value: 'empty', label: 'Vide' }
+            ]}
+          />
+        </Field>
+        <p className="text-sm text-mute">
+          {program === 'v2'
+            ? 'Push/Pull/Legs sur 6 jours, 3:00 de repos, 1 RIR, avec tes charges de la semaine dernière comme point de départ.'
+            : program === 'example'
+              ? 'Haut/bas sur 4 jours, à adapter.'
+              : 'Tu construis ton programme toi-même.'}
+        </p>
       </div>
       <button className="btn-primary w-full text-lg" onClick={finish}>
         C'est parti

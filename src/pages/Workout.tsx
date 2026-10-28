@@ -455,8 +455,14 @@ function SetRow({
 }) {
   const plate = ex.unit === 'kg' ? ctx.settings.plateKg : ctx.settings.plateLb;
   const plateOpts = { plate, loadMode: ex.loadMode, baseWeight: ex.baseWeight };
+  // Si la dernière fois a été notée en plates, on propose la cible en plates aussi.
+  const targetLoad = () => {
+    if (target?.weight == null) return '';
+    const plates = lastSet?.notation && /plate/i.test(lastSet.notation) ? toPlateNotation(target.weight, plateOpts) : null;
+    return plates ?? target.weight.toString();
+  };
   const init = () => ({
-    load: set.notation || (set.weight ?? target?.weight)?.toString() || '',
+    load: set.notation || set.weight?.toString() || targetLoad(),
     reps: (set.reps ?? target?.reps)?.toString() ?? '',
     rir: set.rir ?? se.rirTarget
   });
@@ -518,7 +524,9 @@ function SetRow({
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="font-bold text-sm">Set {n}</span>
         <span className="text-mute truncate">
-          {lastSet ? `Dernière fois : ${fmt(lastSet.weight)} × ${fmt(lastSet.reps)} @ ${lastSet.rir === 4 ? '4+' : lastSet.rir} RIR` : 'Pas d’historique'}
+          {lastSet
+            ? `Dernière fois : ${lastSet.notation ? `${lastSet.notation} (${fmt(lastSet.weight)})` : fmt(lastSet.weight)} × ${fmt(lastSet.reps)} @ ${lastSet.rir === 4 ? '4+' : lastSet.rir} RIR`
+            : 'Pas d’historique'}
         </span>
       </div>
       {target && (

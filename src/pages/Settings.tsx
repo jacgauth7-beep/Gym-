@@ -3,6 +3,7 @@ import { db, exportAll, importAll, saveSettings } from '../db';
 import { useBodyweights } from '../hooks';
 import { Field, NumInput, Segmented, Toggle } from '../components/ui';
 import { DEFAULT_ENGINE } from '../lib/defaults';
+import { loadSplitV2 } from '../lib/mySplit';
 import { LEVEL_FR, bodyweightTrend, levelFromYears } from '../lib/engine';
 import { playDing, unlockAudio, vibrate } from '../lib/timer';
 import { fmt, fmtDate, uid } from '../lib/util';
@@ -290,6 +291,17 @@ export function SettingsPage({ settings }: { settings: Settings }) {
 
       <section className="card space-y-3">
         <h2 className="text-lg font-bold">Données</h2>
+        <button
+          className="btn-primary w-full"
+          onClick={async () => {
+            if (!confirm('Remplacer le programme actuel par ton split V2 (6 jours) et enregistrer tes charges de la semaine dernière comme point de départ ? Ton historique existant est conservé.')) return;
+            await loadSplitV2({ plateLb: settings.plateLb, plateKg: settings.plateKg });
+            alert('Split V2 chargé ✓');
+            location.hash = '/seance';
+          }}
+        >
+          Charger mon split V2
+        </button>
         <p className="text-sm text-mute">Tout est stocké sur ce téléphone. Exporte régulièrement une sauvegarde (Fichiers / iCloud).</p>
         <button className="btn-primary w-full" onClick={doExport}>
           Exporter une sauvegarde
