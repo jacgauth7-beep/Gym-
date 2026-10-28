@@ -3,7 +3,7 @@ import { useNow, useSettings } from '../hooks';
 import { notifyEnd, playDing, remainingMs, timer, useTimer, vibrate } from '../lib/timer';
 import { fmtClock } from '../lib/util';
 
-/** Bandeau persistant du minuteur de repos, visible sur tous les écrans. */
+/** Bandeau persistant du minuteur de repos, en bas de l'écran (zone du pouce), visible sur tous les écrans. */
 export function RestBanner() {
   const t = useTimer();
   const settings = useSettings();
@@ -25,7 +25,7 @@ export function RestBanner() {
   const over = left <= 0;
   const pct = t.durationMs > 0 ? Math.min(1, Math.max(0, 1 - left / t.durationMs)) : 1;
   return (
-    <div className="sticky top-0 z-40 pt-safe bg-bg/95 backdrop-blur border-b border-line">
+    <div className="border-b border-line">
       <div className="relative h-1 bg-line">
         <div className={`absolute inset-y-0 left-0 ${over ? 'bg-good' : 'bg-accent'}`} style={{ width: `${pct * 100}%` }} />
       </div>
@@ -41,18 +41,18 @@ export function RestBanner() {
         </div>
         {!over && (
           <>
-            <button className="btn-ghost btn-sm w-12" onClick={() => timer.add(-15)} aria-label="Moins 15 secondes">
+            <button className="btn-ghost w-14 px-0" onClick={() => timer.add(-15)} aria-label="Moins 15 secondes">
               −15
             </button>
-            <button className="btn-ghost btn-sm w-12" onClick={() => timer.add(15)} aria-label="Plus 15 secondes">
+            <button className="btn-ghost w-14 px-0" onClick={() => timer.add(15)} aria-label="Plus 15 secondes">
               +15
             </button>
-            <button className="btn-ghost btn-sm w-12" onClick={() => timer.togglePause()} aria-label={t.pausedLeft != null ? 'Reprendre' : 'Pause'}>
+            <button className="btn-ghost w-14 px-0" onClick={() => timer.togglePause()} aria-label={t.pausedLeft != null ? 'Reprendre' : 'Pause'}>
               {t.pausedLeft != null ? '▶' : '❚❚'}
             </button>
           </>
         )}
-        <button className="btn-ghost btn-sm" onClick={() => timer.stop()}>
+        <button className="btn-ghost px-3" onClick={() => timer.stop()}>
           {over ? 'OK' : 'Passer'}
         </button>
       </div>

@@ -28,15 +28,17 @@ export default function App() {
   if (!settings.onboarded) return <Onboarding />;
 
   return (
-    <div className="flex min-h-full flex-col">
-      <RestBanner />
-      <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-28 pt-3">
+    <div className="flex min-h-full flex-col pt-safe">
+      <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-52 pt-3">
         {tab === 'seance' && <Workout settings={settings} />}
         {tab === 'programme' && <Program settings={settings} />}
         {tab === 'progres' && <Progress settings={settings} exerciseId={route[1]} go={go} />}
         {tab === 'reglages' && <SettingsPage settings={settings} />}
       </main>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 backdrop-blur pb-safe">
+        <div className="mx-auto max-w-xl">
+          <RestBanner />
+        </div>
         <div className="mx-auto flex max-w-xl">
           {TABS.map((t) => (
             <button

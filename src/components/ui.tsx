@@ -14,14 +14,17 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative max-h-[88vh] overflow-y-auto rounded-t-3xl bg-card border-t border-line pb-safe">
-        <div className="sticky top-0 z-10 flex items-center justify-between bg-card px-4 pt-4 pb-2">
+      <div className="relative max-h-[80vh] overflow-y-auto rounded-t-3xl bg-card border-t border-line pb-safe">
+        <div className="sticky top-0 z-10 bg-card px-4 pt-4 pb-2">
           <h2 className="text-lg font-bold">{title}</h2>
-          <button className="btn-ghost btn-sm" onClick={onClose} aria-label="Fermer">
+        </div>
+        <div className="px-4 pb-4">{children}</div>
+        {/* Fermer en bas : atteignable au pouce sur les grands iPhone */}
+        <div className="sticky bottom-0 bg-card px-4 pt-2 pb-4">
+          <button className="btn-ghost w-full" onClick={onClose}>
             Fermer
           </button>
         </div>
-        <div className="px-4 pb-6">{children}</div>
       </div>
     </div>
   );
