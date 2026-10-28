@@ -29,10 +29,10 @@ npm run build      # build de production dans dist/
 
 ### Option A : GitHub Pages (déjà configuré)
 
-1. Fusionne cette branche dans `main`.
-2. Sur GitHub : **Settings → Pages → Build and deployment → Source : GitHub Actions**.
-3. Chaque push sur `main` lance `.github/workflows/deploy.yml` (tests, build, publication).
-4. L'app est servie à `https://<ton-utilisateur>.github.io/<nom-du-repo>/`.
+1. Le dépôt doit être public (Pages gratuit ne sert pas les dépôts privés).
+2. Chaque push sur `main` lance `.github/workflows/deploy.yml` : tests, build, puis publication dans la branche `gh-pages`.
+3. GitHub Pages sert la branche `gh-pages` (Settings → Pages → Source : Deploy from a branch → `gh-pages` / root).
+4. L'app est servie à https://jacgauth7-beep.github.io/Gym-/
 
 ### Option B : Vercel
 
