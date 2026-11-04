@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../db';
 import { useBodyweights, useDays, useExercises, useSessions } from '../hooks';
 import { ExercisePicker } from '../components/ExercisePicker';
-import { Segmented, Sheet, Why } from '../components/ui';
+import { RestPicker, Segmented, Sheet, Toggle, Why } from '../components/ui';
 import { epley, rirForCalc } from '../lib/e1rm';
 import {
   STATUS_STYLE,
@@ -225,6 +225,8 @@ function ExerciseCard({
   const [menu, setMenu] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [restOpen, setRestOpen] = useState(false);
+  const [restKeep, setRestKeep] = useState(true);
   const p = ctx.settings.engine;
 
   const history = useMemo(() => exerciseHistory(sessions, se.exerciseId, session.id), [sessions, se.exerciseId, session.id]);
@@ -266,6 +268,10 @@ function ExerciseCard({
       </header>
 
       {ex.setupNotes && <p className="mt-1 rounded-lg bg-bg px-2 py-1 text-sm text-mute">⚙ {ex.setupNotes}</p>}
+      <button className="mt-1 flex min-h-[40px] items-center gap-2 text-sm text-mute" onClick={() => setRestOpen(true)}>
+        ⏱ Repos <b className="tabular-nums text-ink">{fmtClock(restFor(se, ex, ctx.settings.defaultRestSec))}</b>
+        <span className="text-accent">modifier</span>
+      </button>
       {se.note && <p className="mt-1 text-sm text-mute">📝 {se.note}</p>}
 
       {!collapsed && !se.skipped && (
@@ -318,6 +324,30 @@ function ExerciseCard({
           </div>
         </>
       )}
+
+      <Sheet open={restOpen} onClose={() => setRestOpen(false)} title={`Repos · ${ex.name}`}>
+        {se.programItemId && (
+          <div className="mb-2">
+            <Toggle label="Garder pour les prochaines séances" checked={restKeep} onChange={setRestKeep} />
+          </div>
+        )}
+        <RestPicker
+          value={se.restSec}
+          defaultSec={ex.restSec ?? ctx.settings.defaultRestSec}
+          defaultLabel={ex.restSec != null ? 'repos de l’exercice' : 'repos global'}
+          onChange={async (restSec) => {
+            await mutate(session.id, (s) => {
+              const x = s.exercises.find((y) => y.id === se.id);
+              if (x) x.restSec = restSec;
+            });
+            // Enregistré aussi dans le programme pour les prochaines séances.
+            if (restKeep && se.programItemId && session.dayId) {
+              const day = await db.days.get(session.dayId);
+              if (day) await db.days.update(day.id, { items: day.items.map((it) => (it.id === se.programItemId ? { ...it, restSec } : it)) });
+            }
+          }}
+        />
+      </Sheet>
 
       <Sheet open={menu} onClose={() => setMenu(false)} title={ex.name}>
         <div className="space-y-2">

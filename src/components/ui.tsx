@@ -136,3 +136,39 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
 export function Confirm(message: string) {
   return window.confirm(message);
 }
+
+const REST_PRESETS = [60, 90, 120, 150, 180, 210, 240, 300];
+const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+/** Choix du temps de repos : préréglages en un tap + ajustement à 15 s. `null` = valeur par défaut. */
+export function RestPicker({ value, onChange, defaultSec, defaultLabel }: { value: number | null; onChange: (v: number | null) => void; defaultSec: number; defaultLabel: string }) {
+  const cur = value ?? defaultSec;
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <button className="btn-ghost w-16" onClick={() => onChange(Math.max(15, cur - 15))} aria-label="Moins 15 secondes">
+          −15
+        </button>
+        <div className="flex-1 text-center">
+          <div className="text-3xl font-bold tabular-nums">{clock(cur)}</div>
+          <div className="text-xs text-mute">{value == null ? defaultLabel : 'personnalisé'}</div>
+        </div>
+        <button className="btn-ghost w-16" onClick={() => onChange(cur + 15)} aria-label="Plus 15 secondes">
+          +15
+        </button>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {REST_PRESETS.map((s) => (
+          <button key={s} onClick={() => onChange(s)} className={`btn btn-sm px-0 ${value === s ? 'bg-accent text-white' : 'bg-line/50'}`}>
+            {clock(s)}
+          </button>
+        ))}
+      </div>
+      {value != null && (
+        <button className="btn-ghost btn-sm w-full" onClick={() => onChange(null)}>
+          Revenir à {defaultLabel} ({clock(defaultSec)})
+        </button>
+      )}
+    </div>
+  );
+}

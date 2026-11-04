@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { MUSCLES, type Exercise } from '../types';
-import { Field, NumInput, Segmented } from './ui';
+import { Field, NumInput, RestPicker, Segmented } from './ui';
 
 /** Édition des propriétés d'un exercice de la bibliothèque. */
-export function ExerciseForm({ value, onSave, onCancel }: { value: Exercise; onSave: (e: Exercise) => void; onCancel: () => void }) {
+export function ExerciseForm({ value, globalRest, onSave, onCancel }: { value: Exercise; globalRest: number; onSave: (e: Exercise) => void; onCancel: () => void }) {
   const [e, setE] = useState<Exercise>(value);
   const up = (patch: Partial<Exercise>) => setE({ ...e, ...patch });
   const toggleSecondary = (m: string) =>
@@ -73,10 +73,10 @@ export function ExerciseForm({ value, onSave, onCancel }: { value: Exercise; onS
         <Field label={`Charge à vide (${e.unit})`}>
           <NumInput value={e.baseWeight} onChange={(v) => up({ baseWeight: v ?? 0 })} placeholder="barre, chariot" />
         </Field>
-        <Field label="Repos (s) — vide = global">
-          <NumInput value={e.restSec} onChange={(v) => up({ restSec: v })} placeholder="global" />
-        </Field>
       </div>
+      <Field label="Temps de repos (tous les jours)">
+        <RestPicker value={e.restSec} onChange={(restSec) => up({ restSec })} defaultSec={globalRest} defaultLabel="repos global" />
+      </Field>
       <Field label="Réglages machine">
         <textarea className="input py-2" rows={2} value={e.setupNotes} onChange={(ev) => up({ setupNotes: ev.target.value })} placeholder="Siège cran 4, dossier 2…" />
       </Field>

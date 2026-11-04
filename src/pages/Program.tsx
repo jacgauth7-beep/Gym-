@@ -15,7 +15,7 @@ import { db } from '../db';
 import { useDays, useExercises } from '../hooks';
 import { ExerciseForm } from '../components/ExerciseForm';
 import { ExercisePicker } from '../components/ExercisePicker';
-import { Field, NumInput, Segmented, Sheet } from '../components/ui';
+import { Field, NumInput, RestPicker, Segmented, Sheet } from '../components/ui';
 import { WEEKDAYS_FR, fmtClock, uid } from '../lib/util';
 import type { Exercise, ProgramDay, ProgramItem, Settings } from '../types';
 
@@ -251,6 +251,7 @@ function DayEditor({
           <ItemForm
             item={editing}
             ex={exMap.get(editing.exerciseId)}
+            globalRest={settings.defaultRestSec}
             onSave={(it) => {
               setEditing(null);
               setItems(day.items.map((x) => (x.id === it.id ? it : x)));
@@ -321,7 +322,7 @@ function SortableItem({
   );
 }
 
-function ItemForm({ item, ex, onSave }: { item: ProgramItem; ex: Exercise | undefined; onSave: (i: ProgramItem) => void }) {
+function ItemForm({ item, ex, globalRest, onSave }: { item: ProgramItem; ex: Exercise | undefined; globalRest: number; onSave: (i: ProgramItem) => void }) {
   const [it, setIt] = useState(item);
   const up = (p: Partial<ProgramItem>) => setIt({ ...it, ...p });
   return (
@@ -340,8 +341,13 @@ function ItemForm({ item, ex, onSave }: { item: ProgramItem; ex: Exercise | unde
       <Field label="RIR cible">
         <Segmented value={it.rirTarget} onChange={(rirTarget) => up({ rirTarget })} options={[0, 1, 2, 3, 4].map((v) => ({ value: v, label: String(v) }))} size="lg" />
       </Field>
-      <Field label={`Repos (s) — vide = ${ex?.restSec != null ? 'celui de l’exercice' : 'réglage global'}`}>
-        <NumInput value={it.restSec} onChange={(v) => up({ restSec: v })} placeholder="par défaut" />
+      <Field label="Temps de repos">
+        <RestPicker
+          value={it.restSec}
+          onChange={(restSec) => up({ restSec })}
+          defaultSec={ex?.restSec ?? globalRest}
+          defaultLabel={ex?.restSec != null ? 'repos de l’exercice' : 'repos global'}
+        />
       </Field>
       <Field label="Notes (affichées en séance)">
         <textarea className="input py-2" rows={2} value={it.notes} onChange={(e) => up({ notes: e.target.value })} />
@@ -390,6 +396,7 @@ function Library({ library, settings }: { library: Exercise[]; settings: Setting
             <ExerciseForm
               key={editing.id}
               value={editing}
+              globalRest={settings.defaultRestSec}
               onCancel={() => setEditing(null)}
               onSave={async (e) => {
                 await db.exercises.put(e);
