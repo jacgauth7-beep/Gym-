@@ -25,6 +25,23 @@ export const MUSCLES = [
 ] as const;
 export type Muscle = (typeof MUSCLES)[number] | string;
 
+/**
+ * Muscles pour lesquels le coach surveille le volume hebdomadaire.
+ * Les autres (avant-bras, lombaires…) reçoivent surtout du travail indirect : les signaler ferait du bruit.
+ */
+export const MAJOR_MUSCLES: ReadonlySet<string> = new Set([
+  'Pectoraux',
+  'Dos (largeur)',
+  'Dos (épaisseur)',
+  'Épaules latérales',
+  'Biceps',
+  'Triceps',
+  'Quadriceps',
+  'Ischio-jambiers',
+  'Fessiers',
+  'Mollets'
+]);
+
 /** Exercice de la bibliothèque (réutilisable dans plusieurs jours). */
 export interface Exercise {
   id: string;
@@ -43,6 +60,8 @@ export interface Exercise {
   restSec: number | null;
   /** Notes de réglage machine (siège cran 4, etc.). */
   setupNotes: string;
+  /** Chargé avec des plates : la saisie se fait en « plates + extra ». */
+  plates?: boolean;
   archived?: boolean;
 }
 
@@ -106,7 +125,17 @@ export interface Session {
   startedAt: number;
   endedAt: number | null;
   note: string;
+  /** Séance faite en semaine de décharge : exclue des tendances. */
+  deload?: boolean;
   exercises: SessionExercise[];
+}
+
+/** Check-in quotidien (clé = date locale AAAA-MM-JJ). */
+export interface Checkin {
+  id: string;
+  date: number;
+  /** Heures de sommeil de la nuit précédente. */
+  sleepH: number | null;
 }
 
 export interface BodyWeight {
@@ -158,6 +187,35 @@ export interface EngineParams {
   rirDriftWarn: number;
   /** Pause (jours) au-delà de laquelle on ne pousse plus la cible. */
   maxGapDays: number;
+  /** Reprise : au-delà de `layoffDays` sans faire l'exercice, la cible baisse de x %/sem (plafonné). */
+  layoffDays: number;
+  layoffDropPctPerWeek: number;
+  layoffMaxDropPct: number;
+  /** Hausse maximale (%) demandée d'une séance à l'autre quand la dernière était sous ton niveau récent. */
+  maxJumpPct: number;
+  /** Sur un plateau, la progression « due » s'accumule jusqu'à ce total de reps (réparti sur les sets). */
+  plateauCapReps: number;
+  /** Nombre de reps sous la fourchette toléré avant de baisser la charge. */
+  belowRangeTolerance: number;
+  /** Autorégulation : écart (%) de forme du jour ignoré, et ajustement maximal (%). */
+  autoRegDeadPct: number;
+  autoRegMaxPct: number;
+  /** Décharge : fraction des sets conservée et RIR ajouté. */
+  deloadSetFactor: number;
+  deloadRirBonus: number;
+  /** Part des exercices en stagnation/régression qui signale une fatigue générale. */
+  fatigueShare: number;
+  /** Pesées minimales et étendue (jours) pour mesurer la tendance du poids. */
+  bwMinPoints: number;
+  bwMinDays: number;
+  /** Vitesse de prise / perte de poids conseillée (% du poids de corps par semaine). */
+  bulkRate: [number, number];
+  cutRate: [number, number];
+  /** Protéines conseillées (g par kg de poids de corps par jour). */
+  proteinRange: [number, number];
+  proteinCutRange: [number, number];
+  /** Sommeil conseillé (heures). */
+  sleepTarget: number;
   regressionPct: number;
   /** Fenêtres consécutives de stagnation avant de suggérer une décharge. */
   deloadAfterStalls: number;
@@ -183,5 +241,12 @@ export interface Settings {
   sound: boolean;
   vibrate: boolean;
   notify: boolean;
+  /** Garder l'écran allumé pendant une séance (Wake Lock). */
+  keepAwake: boolean;
+  /** Proposer le check-in du jour (sommeil, pesée) sur l'écran Séance. */
+  dailyCheckin: boolean;
+  /** Semaine de décharge active jusqu'à cette date (ms), sinon null. */
+  deloadUntil: number | null;
+  lastBackupAt: number | null;
   engine: EngineParams;
 }

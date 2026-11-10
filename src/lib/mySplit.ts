@@ -28,6 +28,8 @@ interface Def {
   setup?: string;
   notes?: string;
   loadMode?: LoadMode;
+  /** Chargé avec des plates (par défaut : oui si les plates comptent par côté). */
+  plates?: boolean;
   unit?: Unit;
   inc?: number;
   last?: PastSet[];
@@ -96,7 +98,7 @@ export const SPLIT_V2: DayDef[] = [
     items: [
       {
         name: 'T-bar row', muscle: 'Dos (épaisseur)', sec: ['Dos (largeur)', 'Biceps', 'Épaules arrière'], sets: 3, min: 6, max: 8,
-        loadMode: 'total', inc: 2.5,
+        loadMode: 'total', plates: true, inc: 2.5,
         last: [
           { w: '3 plates + 25', r: 8, rir: 0 },
           { w: '3 plates + 17.5', r: 7, rir: 0 },
@@ -304,7 +306,7 @@ function lastWeekday(weekday: number, now = new Date()): number {
 
 /**
  * Remplace le programme par le split V2 et enregistre la dernière semaine comme historique.
- * Idempotent : relancer met à jour les mêmes exercices et séances.
+ * Relancer remet le programme et les exercices à leur définition, sans toucher à l'historique déjà importé.
  */
 export async function loadSplitV2(opts: { plateLb: number; plateKg: number }) {
   const existing = await db.exercises.toArray();
@@ -326,6 +328,7 @@ export async function loadSplitV2(opts: { plateLb: number; plateKg: number }) {
         unit,
         increment: d.inc ?? (unit === 'kg' ? 2.5 : 5),
         loadMode: d.loadMode ?? 'total',
+        plates: d.plates ?? d.loadMode === 'perSide',
         baseWeight: prev?.baseWeight ?? 0,
         restSec: null,
         setupNotes: d.setup ?? prev?.setupNotes ?? '',
@@ -405,7 +408,8 @@ export async function loadSplitV2(opts: { plateLb: number; plateKg: number }) {
     // Séance ouverte sans set validé : elle venait de l'ancien programme.
     const open = await db.sessions.filter((s) => s.endedAt == null).toArray();
     for (const s of open) if (!s.exercises.some((e) => e.sets.some((x) => x.done))) await db.sessions.delete(s.id);
-    await db.sessions.bulkPut(sessions);
+    // L'historique de départ n'est importé qu'une fois : le recharger ne doit pas le redater.
+    for (const s of sessions) if (!(await db.sessions.get(s.id))) await db.sessions.put(s);
   });
   await saveSettings({ defaultRestSec: 180, defaultUnit: 'lb' });
 }

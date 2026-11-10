@@ -4,7 +4,7 @@
  * il reste donc juste même si iOS met l'app en pause (écran verrouillé, arrière-plan).
  * L'état est persisté dans localStorage pour survivre à un rechargement.
  */
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 export interface TimerState {
   /** Fin prévue (ms) si en cours. */
@@ -13,12 +13,14 @@ export interface TimerState {
   pausedLeft: number | null;
   durationMs: number;
   label: string;
+  /** Ce qui vient ensuite (« Set 3 sur 3 », « Ensuite : Curl »). */
+  sub: string;
   /** Fin déjà signalée (son/vibration) ? */
   fired: boolean;
 }
 
 const KEY = 'rest-timer';
-const idle: TimerState = { endAt: null, pausedLeft: null, durationMs: 0, label: '', fired: true };
+const idle: TimerState = { endAt: null, pausedLeft: null, durationMs: 0, label: '', sub: '', fired: true };
 
 function load(): TimerState {
   try {
@@ -48,11 +50,11 @@ export const timer = {
     listeners.add(l);
     return () => listeners.delete(l);
   },
-  start(sec: number, label: string) {
-    set({ endAt: Date.now() + sec * 1000, pausedLeft: null, durationMs: sec * 1000, label, fired: false });
+  start(sec: number, label: string, sub = '') {
+    set({ endAt: Date.now() + sec * 1000, pausedLeft: null, durationMs: sec * 1000, label, sub, fired: false });
   },
   add(sec: number) {
-    if (state.pausedLeft != null) set({ ...state, pausedLeft: Math.max(0, state.pausedLeft + sec * 1000), durationMs: state.durationMs + sec * 1000 });
+    if (state.pausedLeft != null) set({ ...state, pausedLeft: Math.max(0, state.pausedLeft + sec * 1000), durationMs: Math.max(1000, state.durationMs + sec * 1000) });
     else if (state.endAt != null) {
       const endAt = Math.max(Date.now(), state.endAt + sec * 1000);
       set({ ...state, endAt, durationMs: Math.max(1000, state.durationMs + sec * 1000), fired: endAt <= Date.now() ? state.fired : false });
@@ -91,10 +93,17 @@ let dingBuffer: AudioBuffer | null = null;
  */
 export async function unlockAudio() {
   try {
+    // Son bref qui se mélange à ta musique au lieu de la couper (Safari 16.4+).
+    const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+    if (session && session.type !== 'transient') session.type = 'transient';
+  } catch {
+    /* API absente : comportement par défaut */
+  }
+  try {
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AC) return;
     if (!audioCtx) audioCtx = new AC();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    if (audioCtx.state !== 'running') await audioCtx.resume();
     if (!dingBuffer) {
       const res = await fetch(`${import.meta.env.BASE_URL}ding.wav`);
       dingBuffer = await audioCtx.decodeAudioData(await res.arrayBuffer());
@@ -106,15 +115,23 @@ export async function unlockAudio() {
 
 export function playDing() {
   if (!audioCtx || !dingBuffer) return;
-  const src = audioCtx.createBufferSource();
-  src.buffer = dingBuffer;
-  src.connect(audioCtx.destination);
-  src.start();
+  try {
+    const src = audioCtx.createBufferSource();
+    src.buffer = dingBuffer;
+    src.connect(audioCtx.destination);
+    src.start();
+  } catch {
+    /* contexte audio suspendu */
+  }
 }
 
-export function vibrate() {
+export function vibrate(pattern: number | number[] = [300, 150, 300]) {
   // Non supporté par Safari iOS : sans effet là-bas, utile sur Android.
-  if ('vibrate' in navigator) navigator.vibrate([300, 150, 300]);
+  try {
+    if ('vibrate' in navigator) navigator.vibrate(pattern);
+  } catch {
+    /* ignoré */
+  }
 }
 
 export async function notifyEnd(label: string) {
@@ -128,3 +145,41 @@ export async function notifyEnd(label: string) {
     /* notifications indisponibles */
   }
 }
+
+// ---------------------------------------------------------------- écran allumé
+
+type Sentinel = { release: () => Promise<void>; addEventListener: (t: 'release', l: () => void) => void };
+let wakeLock: Sentinel | null = null;
+
+async function acquireWakeLock() {
+  try {
+    const wl = (navigator as unknown as { wakeLock?: { request: (t: 'screen') => Promise<Sentinel> } }).wakeLock;
+    if (!wl || wakeLock || document.visibilityState !== 'visible') return;
+    wakeLock = await wl.request('screen');
+    wakeLock.addEventListener('release', () => {
+      wakeLock = null;
+    });
+  } catch {
+    /* refusé (batterie faible, navigateur) : tant pis */
+  }
+}
+
+/**
+ * Garde l'écran allumé tant que `active` est vrai (séance en cours).
+ * Le verrou saute quand l'app passe en arrière-plan : on le reprend au retour.
+ */
+export function useKeepAwake(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    acquireWakeLock();
+    const onVisible = () => document.visibilityState === 'visible' && acquireWakeLock();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      wakeLock?.release().catch(() => {});
+      wakeLock = null;
+    };
+  }, [active]);
+}
+
+export const wakeLockSupported = () => typeof navigator !== 'undefined' && 'wakeLock' in navigator;

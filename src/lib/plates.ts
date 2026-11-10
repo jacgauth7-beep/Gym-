@@ -76,3 +76,28 @@ export function toPlateNotation(
   const rest = round(v - n * opts.plate);
   return `${n} plate${n > 1 ? 's' : ''}${rest ? ` + ${rest}` : ''}`;
 }
+
+export interface PlateOpts {
+  plate: number;
+  loadMode: Exercise['loadMode'];
+  baseWeight: number;
+}
+
+/** Décompose une charge totale en « n plates + extra » (par côté ou au total selon l'exercice). */
+export function splitPlates(total: number, o: PlateOpts): { plates: number; extra: number } {
+  const net = Math.max(0, total - o.baseWeight);
+  const v = o.loadMode === 'perSide' ? net / 2 : net;
+  const plates = Math.floor(v / o.plate + 1e-9);
+  return { plates, extra: round(v - plates * o.plate) };
+}
+
+export function joinPlates(plates: number, extra: number, o: PlateOpts): number {
+  const v = Math.max(0, plates) * o.plate + Math.max(0, extra);
+  return round((o.loadMode === 'perSide' ? v * 2 : v) + o.baseWeight);
+}
+
+/** « 2 plates + 25 », « 1 plate », ou chaîne vide s'il n'y a aucune plate entière. */
+export function plateNotation(plates: number, extra: number): string {
+  if (plates < 1) return '';
+  return `${plates} plate${plates > 1 ? 's' : ''}${extra ? ` + ${extra}` : ''}`;
+}
