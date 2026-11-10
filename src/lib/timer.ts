@@ -93,9 +93,10 @@ let dingBuffer: AudioBuffer | null = null;
  */
 export async function unlockAudio() {
   try {
-    // Son bref qui se mélange à ta musique au lieu de la couper (Safari 16.4+).
+    // « ambient » : le son se mélange à ta musique sans la couper ni baisser son volume (Safari 16.4+).
+    // (« transient » baisserait la musique tant que le contexte audio est actif, donc toute la séance.)
     const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
-    if (session && session.type !== 'transient') session.type = 'transient';
+    if (session && session.type !== 'ambient') session.type = 'ambient';
   } catch {
     /* API absente : comportement par défaut */
   }

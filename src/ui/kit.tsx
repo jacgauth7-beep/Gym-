@@ -112,13 +112,23 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
 
 // ---------------------------------------------------------------- champs
 
-export function Field({ label, hint, children }: { label: ReactNode; hint?: ReactNode; children: ReactNode }) {
+/**
+ * Champ avec son libellé. Ce n'est volontairement PAS un <label> englobant : avec un groupe de boutons à l'intérieur,
+ * toucher le texte d'aide activerait le premier bouton. Pour un champ de saisie, passer `htmlFor` (id du champ).
+ */
+export function Field({ label, hint, htmlFor, children }: { label: ReactNode; hint?: ReactNode; htmlFor?: string; children: ReactNode }) {
   return (
-    <label className="block">
-      <span className="eyebrow mb-1.5 block">{label}</span>
+    <div>
+      {htmlFor ? (
+        <label htmlFor={htmlFor} className="eyebrow mb-1.5 block">
+          {label}
+        </label>
+      ) : (
+        <span className="eyebrow mb-1.5 block">{label}</span>
+      )}
       {children}
       {hint && <span className="mt-1 block text-xs text-faint">{hint}</span>}
-    </label>
+    </div>
   );
 }
 
@@ -132,13 +142,15 @@ export function NumInput({
   onChange,
   placeholder,
   className = '',
-  ariaLabel
+  ariaLabel,
+  id
 }: {
   value: number | null;
   onChange: (v: number | null) => void;
   placeholder?: string;
   className?: string;
   ariaLabel?: string;
+  id?: string;
 }) {
   const [txt, setTxt] = useState(value == null ? '' : String(value));
   useEffect(() => {
@@ -147,6 +159,7 @@ export function NumInput({
   }, [value]);
   return (
     <input
+      id={id}
       className={cx('input num', className)}
       inputMode="decimal"
       placeholder={placeholder}

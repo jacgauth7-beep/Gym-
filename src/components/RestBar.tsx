@@ -27,7 +27,7 @@ export function RestBar() {
   const over = left <= 0;
   const paused = t.pausedLeft != null;
   const pct = t.durationMs > 0 ? Math.min(1, Math.max(0, 1 - left / t.durationMs)) : 1;
-  const caption = over ? (t.sub ? `À toi : ${t.sub}` : 'Repos terminé') : `${paused ? 'En pause' : 'Repos'}${t.sub ? ` · ensuite ${t.sub}` : ' · dernier set'}`;
+  const caption = over ? (t.sub ? `À toi : ${t.sub}` : 'Repos terminé') : `${paused ? 'En pause' : 'Repos'}${t.sub ? ` · ensuite ${t.sub}` : t.label ? ` · ${t.label}` : ''}`;
   return (
     <div className={cx('border-b border-line/70 transition-colors duration-500', over && 'bg-good/10')} role="timer" aria-label="Minuteur de repos">
       <div className={cx('truncate px-4 pt-2 text-xs font-medium', over ? 'text-good' : 'text-mute')}>{caption}</div>

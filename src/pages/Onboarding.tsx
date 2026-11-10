@@ -133,8 +133,8 @@ export function Onboarding() {
                     ]}
                   />
                 </Field>
-                <Field label={`Poids (${unit}), facultatif`}>
-                  <NumInput value={bw} onChange={setBw} placeholder="–" ariaLabel="Poids de corps" />
+                <Field label={`Poids (${unit}), facultatif`} htmlFor="onb-bw">
+                  <NumInput id="onb-bw" value={bw} onChange={setBw} placeholder="–" ariaLabel="Poids de corps" />
                 </Field>
               </div>
             </div>

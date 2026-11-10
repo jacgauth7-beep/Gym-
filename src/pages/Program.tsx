@@ -427,8 +427,8 @@ function ItemSheet({
         <Field label="Temps de repos">
           <RestPicker value={it.restSec} onChange={(restSec) => up({ restSec })} defaultSec={ex?.restSec ?? globalRest} defaultLabel={ex?.restSec != null ? 'repos de l’exercice' : 'repos global'} />
         </Field>
-        <Field label="Note affichée en séance">
-          <textarea className="input" rows={2} value={it.notes} onChange={(e) => up({ notes: e.target.value })} placeholder="Consigne technique, variante…" />
+        <Field label="Note affichée en séance" htmlFor="item-note">
+          <textarea id="item-note" className="input" rows={2} value={it.notes} onChange={(e) => up({ notes: e.target.value })} placeholder="Consigne technique, variante…" />
         </Field>
         <div className="card divide-y divide-line/60 overflow-hidden">
           <ListRow icon={<ArrowLeftRight size={18} />} title="Remplacer par un autre exercice" onClick={onReplace} />

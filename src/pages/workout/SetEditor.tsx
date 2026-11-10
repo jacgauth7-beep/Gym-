@@ -226,7 +226,7 @@ export function SetEditor({
 
         {noteOpen && (
           <input
-            className="input text-sm"
+            className="input"
             placeholder="Note du set (douleur, tempo, partielles…)"
             defaultValue={set.note}
             autoFocus={!set.note}

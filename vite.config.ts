@@ -22,7 +22,7 @@ export default defineConfig({
       manifest: {
         name: 'Carnet de muscu',
         short_name: 'Muscu',
-        description: "Suivi d'entraînement hors ligne avec moteur de progression",
+        description: "Carnet de musculation hors ligne : cibles calculées pour chaque set, coach et suivi des progrès.",
         lang: 'fr',
         start_url: base,
         scope: base,
@@ -33,7 +33,7 @@ export default defineConfig({
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {
@@ -41,7 +41,11 @@ export default defineConfig({
         // les écrans de démarrage ne servent qu'à l'installation : inutile de les mettre en cache
         globIgnores: ['**/splash-*.png'],
         navigateFallback: 'index.html',
-        cleanupOutdatedCaches: true
+        cleanupOutdatedCaches: true,
+        // Indispensable : le nouveau service worker prend la main dès qu'il est installé.
+        // Sans ça, il resterait « en attente » et l'app installée ne se mettrait jamais à jour sur iOS.
+        skipWaiting: true,
+        clientsClaim: true
       }
     })
   ],

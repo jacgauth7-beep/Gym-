@@ -219,7 +219,6 @@ export interface EngineParams {
   regressionPct: number;
   /** Fenêtres consécutives de stagnation avant de suggérer une décharge. */
   deloadAfterStalls: number;
-  deloadPct: number;
   /** Set « dur » : RIR ≤ ce seuil. */
   hardSetRir: number;
   /** Poids d'un set pour un muscle secondaire dans le volume. */

@@ -11,11 +11,11 @@ export function ExerciseForm({ value, globalRest, onSave, onCancel }: { value: E
     up({ secondaryMuscles: e.secondaryMuscles.includes(m) ? e.secondaryMuscles.filter((x) => x !== m) : [...e.secondaryMuscles, m] });
   return (
     <div className="space-y-5">
-      <Field label="Nom">
-        <input className="input" value={e.name} onChange={(ev) => up({ name: ev.target.value })} placeholder="Nom de l’exercice" />
+      <Field label="Nom" htmlFor="ex-name">
+        <input id="ex-name" className="input" value={e.name} onChange={(ev) => up({ name: ev.target.value })} placeholder="Nom de l’exercice" />
       </Field>
-      <Field label="Muscle principal">
-        <select className="input" value={e.primaryMuscle} onChange={(ev) => up({ primaryMuscle: ev.target.value, secondaryMuscles: e.secondaryMuscles.filter((m) => m !== ev.target.value) })}>
+      <Field label="Muscle principal" htmlFor="ex-muscle">
+        <select id="ex-muscle" className="input" value={e.primaryMuscle} onChange={(ev) => up({ primaryMuscle: ev.target.value, secondaryMuscles: e.secondaryMuscles.filter((m) => m !== ev.target.value) })}>
           {MUSCLES.map((m) => (
             <option key={m}>{m}</option>
           ))}
@@ -56,8 +56,8 @@ export function ExerciseForm({ value, globalRest, onSave, onCancel }: { value: E
             ]}
           />
         </Field>
-        <Field label={`Plus petit saut (${e.unit})`}>
-          <NumInput value={e.increment} onChange={(v) => up({ increment: v && v > 0 ? v : 1 })} />
+        <Field label={`Plus petit saut (${e.unit})`} htmlFor="ex-inc">
+          <NumInput id="ex-inc" value={e.increment} onChange={(v) => up({ increment: v && v > 0 ? v : 1 })} />
         </Field>
       </div>
       <div className="inset px-4">
@@ -74,8 +74,8 @@ export function ExerciseForm({ value, globalRest, onSave, onCancel }: { value: E
                 ]}
               />
             </Field>
-            <Field label={`Charge à vide (${e.unit})`} hint="Poids de la barre ou du chariot, ajouté au total. Laisse 0 si tu ne le comptes pas.">
-              <NumInput value={e.baseWeight} onChange={(v) => up({ baseWeight: v ?? 0 })} placeholder="0" />
+            <Field label={`Charge à vide (${e.unit})`} htmlFor="ex-base" hint="Poids de la barre ou du chariot, ajouté au total. Laisse 0 si tu ne le comptes pas.">
+              <NumInput id="ex-base" value={e.baseWeight} onChange={(v) => up({ baseWeight: v ?? 0 })} placeholder="0" />
             </Field>
           </div>
         )}
@@ -83,8 +83,8 @@ export function ExerciseForm({ value, globalRest, onSave, onCancel }: { value: E
       <Field label="Temps de repos (tous les jours)">
         <RestPicker value={e.restSec} onChange={(restSec) => up({ restSec })} defaultSec={globalRest} defaultLabel="repos global" />
       </Field>
-      <Field label="Réglages machine" hint="Affichés pendant la séance pour retrouver la même position.">
-        <textarea className="input" rows={2} value={e.setupNotes} onChange={(ev) => up({ setupNotes: ev.target.value })} placeholder="Siège cran 4, dossier 2…" />
+      <Field label="Réglages machine" htmlFor="ex-setup" hint="Affichés pendant la séance pour retrouver la même position.">
+        <textarea id="ex-setup" className="input" rows={2} value={e.setupNotes} onChange={(ev) => up({ setupNotes: ev.target.value })} placeholder="Siège cran 4, dossier 2…" />
       </Field>
       <div className="flex gap-2 pt-1">
         <button className="btn btn-secondary flex-1" onClick={onCancel}>

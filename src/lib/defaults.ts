@@ -50,7 +50,6 @@ export const DEFAULT_ENGINE: EngineParams = {
   sleepTarget: 7,
   regressionPct: 0.5,
   deloadAfterStalls: 2,
-  deloadPct: 10,
   hardSetRir: 3,
   secondaryWeight: 0.5,
   volumeLow: 10,
